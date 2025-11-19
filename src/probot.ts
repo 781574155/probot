@@ -68,6 +68,7 @@ export type State = {
   redisConfig?: RedisOptions | string | undefined;
   webhookPath: string;
   webhookSecret: string;
+  skipWebhookVerification: boolean;
   request?: RequestRequestOptions | undefined;
   server?: Server | void;
 };
@@ -127,6 +128,7 @@ export class Probot {
       redisConfig: options.redisConfig,
       webhookPath: options.webhookPath || defaultWebhookPath,
       webhookSecret: options.secret || defaultWebhookSecret,
+      skipWebhookVerification: options.skipWebhookVerification || false,
       request: options.request,
       server: options.server,
     };
@@ -178,6 +180,7 @@ export class Probot {
         log: this.#state.log,
         octokit: this.#state.octokit,
         webhookSecret: this.#state.webhookSecret,
+        skipVerification: this.#state.skipWebhookVerification,
       });
 
       this.#state.initializationState = INITIALIZED;

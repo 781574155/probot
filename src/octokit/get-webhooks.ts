@@ -11,6 +11,7 @@ type GetWebhooksOptions = {
   log: Logger;
   octokit: ProbotOctokit;
   webhookSecret: string;
+  skipVerification?: boolean;
 };
 
 export function getWebhooks(options: GetWebhooksOptions): ProbotWebhooks {
@@ -19,6 +20,27 @@ export function getWebhooks(options: GetWebhooksOptions): ProbotWebhooks {
     secret: options.webhookSecret,
     transform: (event) => webhookTransform(options, event),
   });
+
+  // If skipVerification is enabled, override verifyAndReceive to skip signature verification
+  if (options.skipVerification) {
+    webhooks.verifyAndReceive = async (event) => {
+      // Parse the payload and directly call receive without verification
+      let payload;
+      try {
+        payload = JSON.parse(event.payload);
+      } catch (error) {
+        (error as any).message = "Invalid JSON";
+        (error as any).status = 400;
+        throw new AggregateError([error], (error as any).message);
+      }
+      return webhooks.receive({
+        id: event.id,
+        name: event.name as any,
+        payload,
+      });
+    };
+  }
+
   webhooks.onError(getErrorHandler(options.log));
   return webhooks;
 }

@@ -133,6 +133,17 @@ declare global {
        */
       WEBHOOK_SECRET?: string | undefined;
 
+      /**
+       * When set to 'true', skips webhook signature verification and trusts
+       * all incoming webhook deliveries. This should only be used in trusted
+       * environments or for testing purposes as it bypasses GitHub's security
+       * mechanism.
+       *
+       * @example 'true'
+       * @default 'false'
+       */
+      SKIP_WEBHOOK_VERIFICATION?: "true" | "false" | undefined;
+
       NO_SMEE_SETUP?: "true" | undefined;
 
       PROJECT_DOMAIN?: string | undefined;

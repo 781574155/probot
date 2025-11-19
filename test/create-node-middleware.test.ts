@@ -232,4 +232,112 @@ describe("createNodeMiddleware", () => {
 
     expect(counter).toBe(1);
   });
+
+  test("with skipWebhookVerification enabled, accepts webhooks without valid signatures", async () => {
+    const onPushCalls: any[] = [];
+    const onPush = (event: any) => {
+      onPushCalls.push(event);
+    };
+
+    const app: ApplicationFunction = (app) => {
+      app.on("push", onPush);
+    };
+    const middleware = await createNodeMiddleware(app, {
+      probot: createProbot({
+        overrides: {
+          log: pino(new MockLoggerTarget()),
+          skipWebhookVerification: true,
+        },
+        env: {
+          APP_ID,
+          PRIVATE_KEY,
+          WEBHOOK_SECRET,
+        },
+      }),
+    });
+
+    const server = createServer(middleware);
+
+    await new Promise<void>((resolve) => server.listen(resolve));
+
+    const port = (server.address() as any).port;
+
+    const body = JSON.stringify(pushEvent);
+
+    // Send a webhook with an invalid signature
+    await fetch(`http://localhost:${port}/api/github/webhooks`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-github-event": "push",
+        "x-github-delivery": "1",
+        "x-hub-signature-256": "sha256=invalidsignature",
+      },
+      body,
+    });
+
+    await new Promise<void>((resolve, reject) =>
+      server.close((err) => {
+        err ? reject(err) : resolve();
+      }),
+    );
+
+    // The webhook should be processed despite invalid signature
+    expect(onPushCalls.length).toBe(1);
+    expect(onPushCalls[0].name).toBe("push");
+  });
+
+  test("with skipWebhookVerification enabled via environment variable", async () => {
+    const onPushCalls: any[] = [];
+    const onPush = (event: any) => {
+      onPushCalls.push(event);
+    };
+
+    const app: ApplicationFunction = (app) => {
+      app.on("push", onPush);
+    };
+    const middleware = await createNodeMiddleware(app, {
+      probot: createProbot({
+        overrides: {
+          log: pino(new MockLoggerTarget()),
+        },
+        env: {
+          APP_ID,
+          PRIVATE_KEY,
+          WEBHOOK_SECRET,
+          SKIP_WEBHOOK_VERIFICATION: "true",
+        },
+      }),
+    });
+
+    const server = createServer(middleware);
+
+    await new Promise<void>((resolve) => server.listen(resolve));
+
+    const port = (server.address() as any).port;
+
+    const body = JSON.stringify(pushEvent);
+
+    // Send a webhook with an invalid signature
+    await fetch(`http://localhost:${port}/api/github/webhooks`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-github-event": "push",
+        "x-github-delivery": "1",
+        "x-hub-signature-256": "sha256=invalidsignature",
+      },
+      body,
+    });
+
+    await new Promise<void>((resolve, reject) =>
+      server.close((err) => {
+        err ? reject(err) : resolve();
+      }),
+    );
+
+    // The webhook should be processed despite invalid signature
+    expect(onPushCalls.length).toBe(1);
+    expect(onPushCalls[0].name).toBe("push");
+  });
 });

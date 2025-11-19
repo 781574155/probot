@@ -15,6 +15,7 @@ const DEFAULTS: Partial<Env> = {
   APP_ID: "",
   WEBHOOK_SECRET: "",
   WEBHOOK_PATH: defaultWebhookPath,
+  SKIP_WEBHOOK_VERIFICATION: "false",
   GHE_HOST: "",
   GHE_PROTOCOL: "https",
   LOG_FORMAT: undefined,
@@ -54,6 +55,8 @@ export function createProbot({
     secret: envWithDefaults.WEBHOOK_SECRET,
     redisConfig: envWithDefaults.REDIS_URL,
     webhookPath: envWithDefaults.WEBHOOK_PATH,
+    skipWebhookVerification:
+      envWithDefaults.SKIP_WEBHOOK_VERIFICATION === "true",
     baseUrl: envWithDefaults.GHE_HOST
       ? `${envWithDefaults.GHE_PROTOCOL || "https"}://${
           envWithDefaults.GHE_HOST

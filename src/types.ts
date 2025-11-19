@@ -44,6 +44,7 @@ export interface Options {
   request?: RequestRequestOptions | undefined;
   webhookPath?: string | undefined;
   webhookProxy?: string | undefined;
+  skipWebhookVerification?: boolean | undefined;
 }
 
 // Omit the `payload`, `id`,`name` properties from the `Context` class as they are already present in the types of `WebhookEvent`
